@@ -2,9 +2,12 @@
 
 ## About
 
-This recipe instances the Postgres 18.3 Docker image as an Apptainer
-application. These instructions are primarily for ALCF Polaris users but can be
-modified to fit your HPC environment as needed.
+This recipe instances FerretDB Postgres + Document DB
+17-0.107.0 Docker image. You will need to download and add the FerretDB binary
+to your shell `$PATH` from
+[this url](https://github.com/FerretDB/FerretDB/releases/tag/v2.7.0). These
+instructions are primarily for ALCF Polaris users but can be modified to fit
+your HPC environment as needed.
 
 ## Instructions
 
@@ -24,6 +27,9 @@ export HTTP_PROXY=http://proxy.alcf.anl.gov:3128
 export HTTPS_PROXY=http://proxy.alcf.anl.gov:3128
 export http_proxy=http://proxy.alcf.anl.gov:3128
 export https_proxy=http://proxy.alcf.anl.gov:3128
+
+# FerretDB Variable
+export FERRETDB_POSTGRESQL_URL=postgres://username:password@localhost:5432/postgres
 ```
 
 2. Create directories
@@ -31,24 +37,23 @@ export https_proxy=http://proxy.alcf.anl.gov:3128
 ```bash
 mkdir -p $APPTAINER_TMPDIR
 mkdir -p $APPTAINER_CACHEDIR
-mkdir -p pgdata pgrun   # Used for Postgres data
+mkdir -p ferretdata ferretrun   # Used for Postgres data
 ```
 
-3. Create the environment file (provided in `pg.env`)
+3. Create the Postgres environment file (provided in `pg.env`)
 
 ```bash
 cat > pg.env <<EOF
-POSTGRES_USER=pguser
-POSTGRES_PASSWORD=mypguser123
-POSTGRES_DB=mydb
-POSTGRES_INITDB_ARGS="--encoding=UTF-8"
+POSTGRES_USER=username
+POSTGRES_PASSWORD=password
+POSTGRES_DB=postgres
 EOF
 ```
 
 4. Build the Postgres image
 
 ```bash
-apptainer build postgres_18-3.apptainer docker://postgres:18.3
+apptainer build postgres_17.apptainer docker://ghcr.io/ferretdb/postgres-documentdb:17-0.107.0-ferretdb-2.7.0
 ```
 
 5. Run the Postgres Apptainer instance
@@ -56,10 +61,10 @@ apptainer build postgres_18-3.apptainer docker://postgres:18.3
 ```bash
 apptainer instance run \
     --env-file pg.env \
-    -B pgdata:/var/lib/postgresql/data \
-    -B pgrun:/var/run/postgresql \
-    postgres_18-3.apptainer \
-    postgres
+    -B ferretdata:/var/lib/postgresql/data \
+    -B ferretrun:/var/run/postgresql \
+    postgres_17.apptainer \
+    ferretdb_postgres
 ```
 
 6. View the currently running Apptainer instances
